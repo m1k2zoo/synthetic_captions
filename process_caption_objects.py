@@ -101,7 +101,7 @@ def generate_extraction_prompt(caption):
     """
     Generate a prompt for extracting objects based on a caption.
     """
-    prompt_template = f"""Task: You are given a caption that describes an image. Your goal is to identify and list the relevant objects mentioned in the caption. These objects should be tangible, concrete items that could be visually represented in an image.
+    prompt_template = f"""You are given a caption that describes an image. Your goal is to identify and list the relevant objects or concepts mentioned in the caption. These will be items that could be visually represented in an image.
 
 Instructions:
 
@@ -186,6 +186,7 @@ def main(args):
     captions = df["caption"].tolist()
     
     # Initialize the LLM detector
+    print("Initializing the LLM model...")
     llm = LLM(model="meta-llama/Meta-Llama-3.1-70B-Instruct", tensor_parallel_size=4)
     sampling_params = SamplingParams(temperature=0.8, max_tokens=900, stop=["\n\n"])
     
