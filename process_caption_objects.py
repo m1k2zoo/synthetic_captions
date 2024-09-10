@@ -109,6 +109,7 @@ Instructions:
 2. Always extract at least one noun, even if the caption seems abstract. This could include general concepts, people, animals, places, or objects.
 3. Avoid including any descriptive text, quantities, opinions, or additional comments.
 4. Provide the output in a clear, comma-separated list of objects.
+5. Only provide the output with no additional text or explanation.
 
 Here are some examples:
 
