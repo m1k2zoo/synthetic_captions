@@ -7,7 +7,7 @@ input_file="${base_dir}/csvs/cc12m_images_captions.csv"
 output_base="${base_dir}/csvs/negation_dataset/cc12m_images_extracted_pos"
 
 # Total rows to process
-TOTAL_ROWS=10100000
+TOTAL_ROWS=10003877
 # Number of jobs (16 jobs total, 2 per node)
 NUM_JOBS=16
 # Number of rows per job
