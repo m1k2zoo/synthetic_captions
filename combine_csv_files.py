@@ -17,10 +17,9 @@ def combine_csv_files(base_dir, csv_type):
     csv_dir = os.path.join(base_dir, "csvs/negation_dataset")
     output_file = os.path.join(csv_dir, f"combined/{csv_type}.csv")
 
-    # List of CSV files to combine based on the provided type
-    csv_files = [
-        os.path.join(csv_dir, f"{csv_type}_{start}_{end}.csv")
-        for start, end in [
+    # Define the indices based on csv_type
+    if csv_type == "cc12m_images_extracted_pos":
+        indices = [
             (0, 666925),
             (666925, 1333850),
             (1333850, 2000775),
@@ -38,6 +37,33 @@ def combine_csv_files(base_dir, csv_type):
             (9336950, 10003875),
             (10003875, 10003876)  # Last file handles remaining rows
         ]
+    elif csv_type == "cc12m_images_extracted_pos_neg":
+        indices = [
+            (0, 625242),
+            (625242, 1250484),
+            (1250484, 1875726),
+            (1875726, 2500968),
+            (2500968, 3126210),
+            (3126210, 3751452),
+            (3751452, 4376694),
+            (4376694, 5001936),
+            (5001936, 5627178),
+            (5627178, 6252420),
+            (6252420, 6877662),
+            (6877662, 7502904),
+            (7502904, 8128146),
+            (8128146, 8753388),
+            (8753388, 9378630),
+            (9378630, 10003876)  # Last file handles remaining rows
+        ]
+    else:
+        print(f"Error: Unsupported csv_type '{csv_type}'. Please check your input.")
+        return
+
+    # List of CSV files to combine based on the provided type
+    csv_files = [
+        os.path.join(csv_dir, f"{csv_type}_{start}_{end}.csv")
+        for start, end in indices
     ]
 
     # Initialize an empty list to hold dataframes
@@ -91,3 +117,8 @@ if __name__ == "__main__":
 
     # Call the function to combine CSV files
     combine_csv_files(args.base_dir, args.csv_type)
+
+    # Example usage:
+    # python combine_csv_files.py --csv_type cc12m_images_extracted_pos
+    # python combine_csv_files.py --csv_type cc12m_images_extracted_pos_neg
+    
