@@ -3,8 +3,8 @@
 # Pass node number as the first argument
 NODE_NUM=$1
 base_dir="/mnt/nfs_asia"
-input_file="${base_dir}/csvs/combined/cc12m_images_extracted_pos.csv"
-output_base="${base_dir}/csvs/train_images_extracted_pos_neg"
+input_file="${base_dir}/csvs/negation_dataset/combined/cc12m_images_extracted_pos.csv"
+output_base="${base_dir}/csvs/negation_dataset/train_images_extracted_pos_neg"
 
 # Total rows to process
 TOTAL_ROWS=10003877
