@@ -44,7 +44,7 @@ for i in $(seq 0 $((NUM_JOBS - 1))); do
     # Run the job on the corresponding GPU
     echo "Running job $i on GPU $i with rows $START_INDEX to $END_INDEX"
     
-    CUDA_VISIBLE_DEVICES=$i python filter_negative_objects.py --input_file $input_file --output_file $output_file --index_start $START_INDEX --index_end $END_INDEX > logs/filter_${i}.log 2>&1 &
+    CUDA_VISIBLE_DEVICES=$i python filter_negative_objects.py --input_file $input_file --output_file $output_file --start_index $START_INDEX --end_index $END_INDEX > logs/filter_${i}.log 2>&1 &
 done
 
 echo "All jobs launched."

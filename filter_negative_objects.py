@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument('--output_file', type=str, required=True, help='Path to save the updated CSV file.')
     parser.add_argument('--start_index', type=int, default=0, help='Starting index of the chunk to process (inclusive). Default is 0.')
     parser.add_argument('--end_index', type=int, default=-1, help='Ending index of the chunk to process (exclusive). Default is -1 (process all rows from start_index).')
-    parser.add_argument('--batch_size', type=int, default=64, help='Number of images to process in a batch. Default is 128.')
+    parser.add_argument('--batch_size', type=int, default=64, help='Number of images to process in a batch. Default is 64.')
     
     args = parser.parse_args()
     return args
