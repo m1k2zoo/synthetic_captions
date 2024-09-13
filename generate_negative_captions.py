@@ -404,8 +404,6 @@ def process_captioning_task(df, model_name, args, M):
         args (argparse.Namespace): Parsed command-line arguments.
         M (int): The median number of negative objects per image, used to determine the number of captions to generate.
     """
-    llm, sampling_params = initialize_llm(model_name)
-
     # Initialize a new column to store the generated negative captions
     df["negative_captions"] = None
 
@@ -414,7 +412,7 @@ def process_captioning_task(df, model_name, args, M):
     object_indices = []  # Track the negative object index for each prompt (in case there are multiple negative objects per image)
 
     # Start generating prompts for all the captions
-    for i in tqdm(range(args.index_start, args.index_end), desc="Generating prompts"):
+    for i in tqdm(df.index, desc="Generating prompts"):
         # Extract the necessary information from the DataFrame
         affirmative_caption = df.loc[i, "caption"]
         negative_objects = eval(df.loc[i, "negative_objects"])  # Assuming objects are stored as strings
@@ -441,6 +439,9 @@ def process_captioning_task(df, model_name, args, M):
             image_indices.append(i)  # Track which image this prompt corresponds to
             object_indices.append(j)  # Track which negative object this prompt corresponds to
 
+    # Initialize the LLM and sampling parameters
+    llm, sampling_params = initialize_llm(model_name)
+
     # Send all prompts in a single batch to the LLM
     start_time = time.time()
     print("Generating negative captions...")
@@ -449,7 +450,7 @@ def process_captioning_task(df, model_name, args, M):
     print(f"Generation time (for {len(prompts)} prompts): {end_time - start_time} seconds")
 
     # Initialize a dictionary to store the negative captions for each image
-    negative_captions_dict = {i: [] for i in range(args.index_start, args.index_end)}
+    negative_captions_dict = {i: [] for i in df.index}
 
     # Process the LLM outputs and organize them by image index
     for idx, output in enumerate(outputs):
@@ -469,7 +470,7 @@ def process_captioning_task(df, model_name, args, M):
             print(f"Error processing output for image index {image_index}, object index {object_index}: {e}")
 
     # Store the generated negative captions back into the DataFrame
-    for i in range(args.index_start, args.index_end):
+    for i in df.index:
         negative_captions = negative_captions_dict[i]
         df.loc[i, "negative_captions"] = str(negative_captions)
 
@@ -483,8 +484,10 @@ def main(args):
     model_name = model_mapping[args.model]  # Use alias to get full model name
 
     df = pd.read_csv(args.input_file)
-    M = compute_median_negative_objects(df)
-    print(f"Median number of negative objects per image: {M}")
+    # M = compute_median_negative_objects(df)
+    # print(f"Median number of negative objects per image: {M}")
+    M = 3 # Set M to a fixed value for consistent results, or use the computed median
+    print(f"Using M = {M} for generating negative captions.")
 
     # Set index_end to the length of the DataFrame if it's -1 or exceeds the length of the DataFrame
     if args.index_end == -1 or args.index_end > len(df):
@@ -493,8 +496,15 @@ def main(args):
     # Subset the DataFrame to only the rows specified by index_start and index_end
     df_subset = df.iloc[args.index_start:args.index_end].copy()
 
+    # Store the initial number of rows before filtering
+    initial_rows = len(df_subset)
+
     # Remove rows where the negative objects are empty
     df_subset = df_subset[df_subset["negative_objects"].apply(lambda x: bool(eval(x)) if pd.notnull(x) else False)].copy()
+
+    # Calculate and print the number of dropped rows
+    dropped_rows = initial_rows - len(df_subset)
+    print(f"Dropped {dropped_rows} rows where negative objects were empty.")
 
     # Process the task of generating negative captions
     process_captioning_task(df_subset, model_name, args, M)
