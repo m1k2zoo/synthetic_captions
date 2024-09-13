@@ -56,6 +56,32 @@ def combine_csv_files(base_dir, csv_type):
             (8753388, 9378630),
             (9378630, 10003876)  # Last file handles remaining rows
         ]
+    elif csv_type == "cc12m_images_pos_neg_filtered":
+        indices = [
+            (0, 416828),
+            (1250484, 1667312),
+            (1667312, 2084140),
+            (2084140, 2500968),
+            (2500968, 2917796),
+            (2917796, 3334624),
+            (3334624, 3751452),
+            (3751452, 4168280),
+            (4168280, 4585108),
+            (416828, 833656),
+            (4585108, 5001936),
+            (5001936, 5418764),
+            (5418764, 5835592),
+            (5835592, 6252420),
+            (6252420, 6669248),
+            (6669248, 7086076),
+            (7086076, 7502904),
+            (7502904, 7919732),
+            (7919732, 8336560),
+            (833656, 1250484),
+            (8753388, 9170216),
+            (9170216, 9587044),
+            (9587044, -1)  # Last file handles remaining rows
+        ]
     else:
         print(f"Error: Unsupported csv_type '{csv_type}'. Please check your input.")
         return
@@ -121,4 +147,4 @@ if __name__ == "__main__":
     # Example usage:
     # python combine_csv_files.py --csv_type cc12m_images_extracted_pos
     # python combine_csv_files.py --csv_type cc12m_images_extracted_pos_neg
-    
+    # python combine_csv_files.py --csv_type cc12m_images_pos_neg_filtered
