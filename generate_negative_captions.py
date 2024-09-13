@@ -2,15 +2,12 @@
 This script generates negative captions from affirmative captions using a large language model (LLM).
 
 Example usage:
+    index_start = 0
+    index_end = 10
     base_dir = "/mnt/nfs_asia"
     input_file = "${base_dir}/csvs/negation_dataset/combined/cc12m_images_extracted_pos_neg.csv"
     output_base = "${base_dir}/csvs/negation_dataset/cc12m_images_captioned"
-    index_start = 0
-    index_end = 10
     python generate_negative_captions.py --model llama3.1 --input_file $input_file --output_base $output_base --index_start $index_start --index_end $index_end
-
-To run a subset of the data, specify the starting and ending indices:
-    python generate_negative_captions.py --input_file /data/healthy-ml/gobi1/data/cc3m/negation_dataset/filtered_objects/train_images_extracted_pos_neg_filtered.csv --index_start 15 --index_end 30 --output_base /data/healthy-ml/gobi1/data/cc3m/negation_dataset/filtered_objects/train_images --model mixtral
 """
 
 import argparse
