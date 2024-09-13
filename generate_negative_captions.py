@@ -336,6 +336,64 @@ def initialize_llm(model_name):
     sampling_params = SamplingParams(temperature=0.8, max_tokens=900, stop=["\n\n"])
     return llm, sampling_params
 
+# def process_captioning_task(df, model_name, args, M):
+#     """
+#     Processes the task by generating M negative captions for each affirmative caption in the DataFrame.
+
+#     Parameters:
+#         df (pd.DataFrame): The DataFrame containing the data, including columns for captions, positive objects, and negative objects.
+#         model_name (str): The full model name to be used for the LLM.
+#         args (argparse.Namespace): Parsed command-line arguments.
+#         M (int): The median number of negative objects per image, used to determine the number of captions to generate.
+#     """
+#     llm, sampling_params = initialize_llm(model_name)
+
+#     # Initialize a new column to store the generated negative captions
+#     df["negative_captions"] = None
+
+#     start_time = time.time()
+    
+#     for i in tqdm(range(args.index_start, args.index_end), desc="Generating negative captions"):
+#         # Extract the necessary information from the DataFrame
+#         affirmative_caption = df.loc[i, "caption"]
+#         negative_objects = eval(df.loc[i, "negative_objects"])  # Assuming objects are stored as strings
+
+#         # Sample M negative objects from the list of negative objects
+#         sampled_negative_objects = sample_negative_objects(negative_objects, M)
+
+#         negative_captions = []
+#         for negative_object in sampled_negative_objects:
+#             # Generate a prompt for the LLM based on the affirmative caption, negative object, and examples
+            
+#             # Randomly select examples list and shuffle examples
+#             if random.random() < 0.5:
+#                 examples_list = affirmation_first_examples_list
+#             else:
+#                 examples_list = negation_first_examples_list
+#             # Randomly select and shuffle three examples
+#             selected_examples = random.sample(examples_list, 3)
+#             random.shuffle(selected_examples)
+#             examples = "\n\n".join(selected_examples)
+
+#             prompt = generate_prompt(affirmative_caption, [negative_object], examples)
+
+#             # Generate the negative caption using the LLM
+#             output = llm.generate([prompt], sampling_params, use_tqdm=False)[0]
+
+#             try:
+#                 generated_text = output.outputs[0].text
+#                 negative_caption = process_llm_output(generated_text)
+#                 negative_captions.append(negative_caption)
+#             except Exception as e:
+#                 print(f"Error processing output for index {i}, object {negative_object}: {e}")
+
+#         # Convert the filtered captions to a string representation and store them in the DataFrame
+#         negative_captions = str([caption for caption in negative_captions if caption.strip()])
+#         df.loc[i, "negative_captions"] = negative_captions
+    
+#     end_time = time.time()
+#     print(f"Generation time (for {args.index_end - args.index_start} entries): {end_time - start_time} seconds")
+
 def process_captioning_task(df, model_name, args, M):
     """
     Processes the task by generating M negative captions for each affirmative caption in the DataFrame.
@@ -351,9 +409,12 @@ def process_captioning_task(df, model_name, args, M):
     # Initialize a new column to store the generated negative captions
     df["negative_captions"] = None
 
-    start_time = time.time()
-    
-    for i in tqdm(range(args.index_start, args.index_end), desc="Generating negative captions"):
+    prompts = []  # Collect all prompts to batch together
+    image_indices = []  # Track the image index for each prompt
+    object_indices = []  # Track the negative object index for each prompt (in case there are multiple negative objects per image)
+
+    # Start generating prompts for all the captions
+    for i in tqdm(range(args.index_start, args.index_end), desc="Generating prompts"):
         # Extract the necessary information from the DataFrame
         affirmative_caption = df.loc[i, "caption"]
         negative_objects = eval(df.loc[i, "negative_objects"])  # Assuming objects are stored as strings
@@ -361,15 +422,13 @@ def process_captioning_task(df, model_name, args, M):
         # Sample M negative objects from the list of negative objects
         sampled_negative_objects = sample_negative_objects(negative_objects, M)
 
-        negative_captions = []
-        for negative_object in sampled_negative_objects:
+        for j, negative_object in enumerate(sampled_negative_objects):
             # Generate a prompt for the LLM based on the affirmative caption, negative object, and examples
-            
-            # Randomly select examples list and shuffle examples
             if random.random() < 0.5:
                 examples_list = affirmation_first_examples_list
             else:
                 examples_list = negation_first_examples_list
+
             # Randomly select and shuffle three examples
             selected_examples = random.sample(examples_list, 3)
             random.shuffle(selected_examples)
@@ -377,22 +436,42 @@ def process_captioning_task(df, model_name, args, M):
 
             prompt = generate_prompt(affirmative_caption, [negative_object], examples)
 
-            # Generate the negative caption using the LLM
-            output = llm.generate([prompt], sampling_params, use_tqdm=False)[0]
+            # Add the prompt to the list
+            prompts.append(prompt)
+            image_indices.append(i)  # Track which image this prompt corresponds to
+            object_indices.append(j)  # Track which negative object this prompt corresponds to
 
-            try:
-                generated_text = output.outputs[0].text
-                negative_caption = process_llm_output(generated_text)
-                negative_captions.append(negative_caption)
-            except Exception as e:
-                print(f"Error processing output for index {i}, object {negative_object}: {e}")
-
-        # Convert the filtered captions to a string representation and store them in the DataFrame
-        negative_captions = str([caption for caption in negative_captions if caption.strip()])
-        df.loc[i, "negative_captions"] = negative_captions
-    
+    # Send all prompts in a single batch to the LLM
+    start_time = time.time()
+    print("Generating negative captions...")
+    outputs = llm.generate(prompts, sampling_params)
     end_time = time.time()
-    print(f"Generation time (for {args.index_end - args.index_start} entries): {end_time - start_time} seconds")
+    print(f"Generation time (for {len(prompts)} prompts): {end_time - start_time} seconds")
+
+    # Initialize a dictionary to store the negative captions for each image
+    negative_captions_dict = {i: [] for i in range(args.index_start, args.index_end)}
+
+    # Process the LLM outputs and organize them by image index
+    for idx, output in enumerate(outputs):
+        try:
+            generated_text = output.outputs[0].text
+            negative_caption = process_llm_output(generated_text)
+
+            # Get the corresponding image and object index
+            image_index = image_indices[idx]
+            object_index = object_indices[idx]
+
+            # Append the generated caption to the relevant image's list
+            if negative_caption.strip():
+                negative_captions_dict[image_index].append(negative_caption)
+
+        except Exception as e:
+            print(f"Error processing output for image index {image_index}, object index {object_index}: {e}")
+
+    # Store the generated negative captions back into the DataFrame
+    for i in range(args.index_start, args.index_end):
+        negative_captions = negative_captions_dict[i]
+        df.loc[i, "negative_captions"] = str(negative_captions)
 
 def main(args):
     # Map model aliases to full model names
