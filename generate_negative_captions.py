@@ -484,6 +484,7 @@ def main(args):
 
     df = pd.read_csv(args.input_file)
     M = compute_median_negative_objects(df)
+    print(f"Median number of negative objects per image: {M}")
 
     # Set index_end to the length of the DataFrame if it's -1 or exceeds the length of the DataFrame
     if args.index_end == -1 or args.index_end > len(df):
@@ -491,6 +492,9 @@ def main(args):
 
     # Subset the DataFrame to only the rows specified by index_start and index_end
     df_subset = df.iloc[args.index_start:args.index_end].copy()
+
+    # Remove rows where the negative objects are empty
+    df_subset = df_subset[df_subset["negative_objects"].apply(lambda x: bool(eval(x)) if pd.notnull(x) else False)].copy()
 
     # Process the task of generating negative captions
     process_captioning_task(df_subset, model_name, args, M)
