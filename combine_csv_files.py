@@ -37,7 +37,7 @@ def combine_csv_files(base_dir, csv_type):
             (9336950, 10003875),
             (10003875, 10003876)  # Last file handles remaining rows
         ]
-    elif csv_type == "cc12m_images_extracted_pos_neg":
+    elif csv_type == "cc12m_images_extracted_pos_neg" or csv_type == "cc12m_images_captioned_llama3.1_neg_captions":
         indices = [
             (0, 625242),
             (625242, 1250484),
@@ -149,3 +149,4 @@ if __name__ == "__main__":
     # python combine_csv_files.py --csv_type cc12m_images_extracted_pos
     # python combine_csv_files.py --csv_type cc12m_images_extracted_pos_neg
     # python combine_csv_files.py --csv_type cc12m_images_pos_neg_filtered
+    # python combine_csv_files.py --csv_type cc12m_images_captioned_llama3.1_neg_captions
