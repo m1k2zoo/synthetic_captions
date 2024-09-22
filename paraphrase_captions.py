@@ -17,7 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Paraphrase captions using a large language model.")
     parser.add_argument("--input_file", type=str, help="The input CSV file containing captions to paraphrase.")
     parser.add_argument("--index_start", type=int, default=0, help="The starting index of captions to process.")
-    parser.add_argument("--index_end", type=int, default=None, help="The ending index of captions to process.")
+    parser.add_argument("--index_end", type=int, default=-1, help="The ending index of captions to process.")
     parser.add_argument("--model", type=str, default="mixtral", choices=["mixtral", "llama3.1"], 
                         help="The LLM model to use for paraphrasing. Options: 'mixtral' or 'llama3.1'.")
     parser.add_argument("--task", type=str, choices=['retrieval', 'mcq'], required=True, 
@@ -240,7 +240,7 @@ def main(args):
 
     df = pd.read_csv(args.input_file)
 
-    if args.index_end is None or args.index_end > len(df):
+    if args.index_end == -1 or args.index_end > len(df):
         args.index_end = len(df)  # Set index_end to the number of entries
 
     # Subset the DataFrame to only the rows specified by index_start and index_end
