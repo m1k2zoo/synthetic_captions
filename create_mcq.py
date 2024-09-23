@@ -1,17 +1,10 @@
-"""
-This script processes a test dataset to create a new DataFrame with multiple-choice questions (MCQs) for each image.
-The script ensures that valid questions are generated based on available positive and negative objects and shuffles the answers.
-
-Example usage:
-    python create_mcq.py --task image --input_file test.csv --output_file mcq_test.csv
-"""
-
 import pandas as pd
 import random
 import argparse
+from tqdm import tqdm  # Import tqdm for progress tracking
 
 # Define the command-line arguments
-parser = argparse.ArgumentParser() # input_file, output_file, task
+parser = argparse.ArgumentParser()  # input_file, output_file, task
 parser.add_argument('--task', type=str, default='image', help='The task to perform: image')
 parser.add_argument('--input_file', type=str, help='The path to the input test CSV file')
 parser.add_argument('--output_file', type=str, help='The path where the output CSV file will be saved')
@@ -36,8 +29,8 @@ def create_image_mcq_dataframe(test_csv, output_csv):
     # Define the possible templates
     templates = ["positive", "negative", "hybrid"]
 
-    # Loop over each row in the test DataFrame
-    for _, row in test_df.iterrows():
+    # Loop over each row in the test DataFrame with tqdm for progress tracking
+    for _, row in tqdm(test_df.iterrows(), total=len(test_df), desc="Processing rows"):
         positive_objects = eval(row['extracted_objects'])
         negative_objects = eval(row['negative_objects'])
         filepath = row['filepath']
