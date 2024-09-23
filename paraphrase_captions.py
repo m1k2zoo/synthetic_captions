@@ -206,26 +206,37 @@ def process_mcq_task(df, model_name, args, mcq_examples):
         df (pd.DataFrame): The DataFrame containing the data.
         model_name (str): The full model name to be used for the LLM.
         args (argparse.Namespace): Parsed command-line arguments.
-        mcq_examples (list): Examples to be used in generating prompts for MCQ task.
-        use_affirmation_negation_guideline (bool): Flag indicating whether to include the affirmation/negation guideline.
+        mcq_examples (str): Examples to be used in generating prompts for the MCQ task.
     """
     llm, sampling_params = initialize_llm(model_name)
     
     start_time = time.time()
-    
-    for i in tqdm(df.index, desc="Paraphrasing captions"):
-        for j in range(4):  # Assuming there are 4 captions: "caption_0", "caption_1", "caption_2", "caption_3"
+
+    prompts = []    # List to store all prompts
+    indices = []    # List to store tuples of (DataFrame index, caption number)
+
+    # Generate prompts for all captions and collect them with their indices
+    for i in tqdm(df.index, desc="Generating prompts"):
+        for j in range(4):  # Assuming there are 4 captions: "caption_0" to "caption_3"
             caption = df.loc[i, f"caption_{j}"]
             prompt = generate_prompt(caption, mcq_examples, use_affirmation_negation_guideline=False)
-            output = llm.generate([prompt], sampling_params, use_tqdm=False)[0]
-            
-            try:
-                generated_text = output.outputs[0].text
-                rephrased_caption = process_llm_output(generated_text)
-                df.loc[i, f"caption_{j}"] = rephrased_caption
-            except Exception as e:
-                print(f"Error processing output for index {i}, caption_{j}: {e}")
-    
+            prompts.append(prompt)
+            indices.append((i, j))  # Store the DataFrame index and caption number
+
+    # Process all prompts in a single batch
+    print("Processing prompts with LLM...")
+    outputs = llm.generate(prompts, sampling_params)
+
+    # Assign the rephrased captions back to the DataFrame
+    for idx, output in enumerate(outputs):
+        i, j = indices[idx]  # Retrieve the DataFrame index and caption number
+        try:
+            generated_text = output.outputs[0].text
+            rephrased_caption = process_llm_output(generated_text)
+            df.loc[i, f"caption_{j}"] = rephrased_caption
+        except Exception as e:
+            print(f"Error processing output for index {i}, caption_{j}: {e}")
+
     end_time = time.time()
     print(f"Generation time (for {args.index_end - args.index_start} entries): {end_time - start_time} seconds")
 
