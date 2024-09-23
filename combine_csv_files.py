@@ -37,7 +37,7 @@ def combine_csv_files(base_dir, csv_type):
             (9336950, 10003875),
             (10003875, 10003876)  # Last file handles remaining rows
         ]
-    elif csv_type == "cc12m_images_extracted_pos_neg" or csv_type == "cc12m_images_captioned_llama3.1_neg_captions":
+    elif csv_type == "cc12m_images_extracted_pos_neg" or csv_type == "cc12m_images_captioned_llama3.1_neg_captions" or csv_type == "cc12m_images_pos_neg_validated":
         indices = [
             (0, 625242),
             (625242, 1250484),
@@ -88,10 +88,16 @@ def combine_csv_files(base_dir, csv_type):
         return
 
     # List of CSV files to combine based on the provided type
-    csv_files = [
-        os.path.join(csv_dir, f"{csv_type}_{start}_{end}.csv")
-        for start, end in indices
-    ]
+    if csv_type == "cc12m_images_pos_neg_validated":
+        csv_files = [
+            os.path.join(csv_dir, f"validated/cc12m_images_pos_neg_{start}_{end}_filtered.csv")
+            for start, end in indices
+        ]
+    else:
+        csv_files = [
+            os.path.join(csv_dir, f"{csv_type}_{start}_{end}.csv")
+            for start, end in indices
+        ]
 
     # Initialize an empty list to hold dataframes
     df_list = []
@@ -150,3 +156,4 @@ if __name__ == "__main__":
     # python combine_csv_files.py --csv_type cc12m_images_extracted_pos_neg
     # python combine_csv_files.py --csv_type cc12m_images_pos_neg_filtered
     # python combine_csv_files.py --csv_type cc12m_images_captioned_llama3.1_neg_captions
+    # python combine_csv_files.py --csv_type cc12m_images_pos_neg_validated
